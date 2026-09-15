@@ -24,10 +24,13 @@ db.serialize(() => {
         password TEXT NOT NULL
     )`);
 
+    // Updated Table Schema with date and status columns
     db.run(`CREATE TABLE IF NOT EXISTS events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         participants INTEGER DEFAULT 0,
+        date TEXT,
+        status TEXT DEFAULT 'Pending',
         owner TEXT NOT NULL
     )`);
 });
@@ -74,13 +77,22 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// Event Management Routes
+// Event Management Routes - Updated to insert date & status
 app.post('/api/events', authenticateToken, (req, res) => {
-    const { name, participants } = req.body;
-    db.run(`INSERT INTO events (name, participants, owner) VALUES (?, ?, ?)`, 
-        [name, participants || 0, req.user.username], function(err) {
+    const { name, participants, date, status } = req.body;
+    db.run(
+        `INSERT INTO events (name, participants, date, status, owner) VALUES (?, ?, ?, ?, ?)`, 
+        [name, participants || 0, date || null, status || 'Pending', req.user.username], 
+        function(err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.status(201).json({ id: this.lastID, name, participants, owner: req.user.username });
+            res.status(201).json({ 
+                id: this.lastID, 
+                name, 
+                participants, 
+                date, 
+                status: status || 'Pending', 
+                owner: req.user.username 
+            });
     });
 });
 
