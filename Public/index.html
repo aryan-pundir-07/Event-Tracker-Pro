@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Tracker Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+    <nav class="border-b border-slate-800 bg-slate-950 px-6 py-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-indigo-400">⚡ EventTracker Pro</h1>
+        <div id="userInfo" class="hidden items-center gap-4">
+            <span class="text-sm text-slate-400">User: <strong id="currentUsername" class="text-white"></strong></span>
+            <button type="button" onclick="logout()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded text-slate-300 cursor-pointer">Logout</button>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-6">
+        <!-- Auth Section -->
+        <div id="authSection" class="max-w-md mx-auto bg-slate-950 p-8 rounded-xl border border-slate-800 shadow-xl mt-12">
+            <h2 id="authTitle" class="text-2xl font-bold mb-6 text-center">Login</h2>
+            <div class="space-y-4">
+                <input type="text" id="authUsername" placeholder="Username" class="w-full bg-slate-900 border border-slate-800 rounded px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500">
+                <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-900 border border-slate-800 rounded px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500">
+                <button type="button" onclick="handleAuth()" id="authBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-2.5 rounded font-semibold transition cursor-pointer">Login</button>
+            </div>
+            <p class="text-xs text-center mt-4 text-slate-400">
+                <span id="authToggleText">Don't have an account?</span> 
+                <button type="button" onclick="toggleAuthMode()" class="text-indigo-400 underline ml-1 cursor-pointer" id="authToggleBtn">Sign Up</button>
+            </p>
+        </div>
+
+        <!-- App Dashboard -->
+        <div id="appDashboard" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800">
+                    <p class="text-slate-400 text-sm">Total Events</p>
+                    <p id="statTotalEvents" class="text-3xl font-bold text-indigo-400">0</p>
+                </div>
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800">
+                    <p class="text-slate-400 text-sm">Total Participants</p>
+                    <p id="statTotalParticipants" class="text-3xl font-bold text-emerald-400">0</p>
+                </div>
+                <div class="bg-slate-950 p-5 rounded-xl border border-slate-800">
+                    <p class="text-slate-400 text-sm">Top Popularity</p>
+                    <p id="statTopEvent" class="text-3xl font-bold text-amber-400">0</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Add Event Form -->
+                <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 h-fit">
+                    <h3 class="text-lg font-semibold mb-4">Add Event</h3>
+                    <form id="eventForm" onsubmit="saveEvent(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Event Name</label>
+                            <input type="text" id="eventName" placeholder="Birthday Party" required class="w-full bg-slate-900 border border-slate-800 rounded px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Participants Count</label>
+                            <input type="number" id="eventParticipants" placeholder="50" required class="w-full bg-slate-900 border border-slate-800 rounded px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Date & Time</label>
+                            <input type="datetime-local" id="eventDate" required class="w-full bg-slate-900 border border-slate-800 rounded px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Status</label>
+                            <select id="eventStatus" class="w-full bg-slate-900 border border-slate-800 rounded px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm">
+                                <option value="Pending">Pending</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="saveBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-2 rounded text-sm font-semibold transition cursor-pointer">Save Event</button>
+                    </form>
+                </div>
+
+                <!-- Events Table -->
+                <div class="lg:col-span-2 bg-slate-950 p-6 rounded-xl border border-slate-800">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+                        <input type="text" id="searchInput" oninput="loadEvents()" placeholder="Search events..." class="w-full sm:w-64 bg-slate-900 border border-slate-800 rounded px-3 py-1.5 text-sm">
+                        <div class="flex gap-2">
+                            <button type="button" onclick="setSort('id')" class="text-xs bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded border border-slate-800 cursor-pointer">Default</button>
+                            <button type="button" onclick="setSort('participants')" class="text-xs bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded border border-slate-800 text-amber-400 cursor-pointer">Sort Popularity 🔥</button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-900 text-slate-400 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Name</th>
+                                    <th class="p-3">Count</th>
+                                    <th class="p-3">Date & Time</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Owner</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventsTableBody" class="divide-y divide-slate-800"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLogin = true;
+        let currentSort = 'id';
+
+        window.onload = function() {
+            const token = localStorage.getItem('jwt_token');
+            if (token) {
+                showDashboard();
+            }
+        };
+
+        function toggleAuthMode() {
+            isLogin = !isLogin;
+            document.getElementById('authTitle').innerText = isLogin ? 'Login' : 'Sign Up';
+            document.getElementById('authBtn').innerText = isLogin ? 'Login' : 'Sign Up';
+            document.getElementById('authToggleText').innerText = isLogin ? "Don't have an account?" : "Already registered?";
+            document.getElementById('authToggleBtn').innerText = isLogin ? 'Sign Up' : 'Login';
+        }
+
+        async function handleAuth() {
+            const username = document.getElementById('authUsername').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+
+            if (!username || !password) return alert("Username aur Password dono likho!");
+
+            const endpoint = isLogin ? '/api/login' : '/api/signup';
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (!res.ok) return alert(data.error || "Auth Failed!");
+
+                if (isLogin) {
+                    localStorage.setItem('jwt_token', data.token);
+                    localStorage.setItem('user_name', data.username);
+                    showDashboard();
+                } else {
+                    alert("Sign up successful! Ab Login karo.");
+                    toggleAuthMode();
+                }
+            } catch (err) {
+                alert("Backend connect nahi ho raha. Check karo 'node server.js' chal raha hai ya nahi.");
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('appDashboard').classList.remove('hidden');
+            document.getElementById('userInfo').classList.remove('hidden');
+            document.getElementById('userInfo').classList.add('flex');
+            document.getElementById('currentUsername').innerText = localStorage.getItem('user_name') || 'User';
+            loadEvents();
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        async function loadEvents() {
+            const token = localStorage.getItem('jwt_token');
+            if (!token) return;
+
+            const search = document.getElementById('searchInput').value || '';
+            try {
+                const res = await fetch(`/api/events?search=${search}&sortBy=${currentSort}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.status === 401) {
+                    alert("Session Expire ho gaya! Please dobara Login karo.");
+                    logout();
+                    return;
+                }
+
+                const events = await res.json();
+                const tbody = document.getElementById('eventsTableBody');
+                tbody.innerHTML = '';
+
+                let totalPart = 0;
+                let topPart = 0;
+
+                if (Array.isArray(events)) {
+                    events.forEach(eve => {
+                        const pCount = parseInt(eve.participants) || 0;
+                        totalPart += pCount;
+                        if (pCount > topPart) topPart = pCount;
+
+                        const isOwner = eve.owner === localStorage.getItem('user_name');
+                        
+                        // Status badge styling
+                        const isCompleted = eve.status === 'Completed';
+                        const statusClass = isCompleted 
+                            ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800' 
+                            : 'bg-amber-950/80 text-amber-400 border border-amber-800';
+
+                        // Date formatting
+                        const formattedDate = eve.date 
+                            ? new Date(eve.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) 
+                            : 'N/A';
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-900/50">
+                                <td class="p-3">${eve.id}</td>
+                                <td class="p-3 font-medium text-white">${eve.name}</td>
+                                <td class="p-3"><span class="bg-indigo-950 text-indigo-300 px-2 py-0.5 rounded text-xs">${eve.participants}</span></td>
+                                <td class="p-3 text-xs text-slate-300">${formattedDate}</td>
+                                <td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold ${statusClass}">${eve.status || 'Pending'}</span></td>
+                                <td class="p-3 text-slate-400">${eve.owner || 'N/A'}</td>
+                                <td class="p-3 text-right">
+                                    ${isOwner ? `<button type="button" onclick="deleteEvent(${eve.id})" class="text-xs text-rose-400 hover:underline cursor-pointer">Delete</button>` : '<span class="text-xs text-slate-600">Read Only</span>'}
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    document.getElementById('statTotalEvents').innerText = events.length;
+                    document.getElementById('statTotalParticipants').innerText = totalPart;
+                    document.getElementById('statTopEvent').innerText = topPart;
+                }
+            } catch (err) {
+                console.error("Load events error:", err);
+            }
+        }
+
+        async function saveEvent(e) {
+            if (e) e.preventDefault();
+
+            const token = localStorage.getItem('jwt_token');
+            if (!token) {
+                alert("Aap logged in nahi hain! Dobara login karo.");
+                logout();
+                return;
+            }
+
+            const name = document.getElementById('eventName').value.trim();
+            const participants = document.getElementById('eventParticipants').value.trim();
+            const date = document.getElementById('eventDate').value;
+            const status = document.getElementById('eventStatus').value;
+
+            if (!name || !participants || !date) {
+                alert("Please saari details (Name, Participants, Date & Time) fill karein!");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/events', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        name: name, 
+                        participants: parseInt(participants),
+                        date: date,
+                        status: status
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert("Server Error: " + (data.error || "Event save nahi ho paya"));
+                    return;
+                }
+
+                alert("🎉 Event Successfully Save Ho Gaya!");
+                document.getElementById('eventForm').reset();
+                loadEvents();
+            } catch (err) {
+                alert("Network Error: " + err.message);
+            }
+        }
+
+        async function deleteEvent(id) {
+            const token = localStorage.getItem('jwt_token');
+            if (!confirm("Kya aap sach me is event ko delete karna chahte hain?")) return;
+            try {
+                await fetch(`/api/events/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                loadEvents();
+            } catch(err) {
+                alert("Delete karne me error aaya!");
+            }
+        }
+
+        function setSort(type) {
+            currentSort = type;
+            loadEvents();
+        }
+    </script>
+</body>
+</html>
