@@ -130,5 +130,8 @@ app.delete('/api/events/:id', authenticateToken, (req, res) => {
         });
     });
 });
-
+// Serve index.html for all frontend routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
