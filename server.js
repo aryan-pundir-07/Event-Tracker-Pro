@@ -24,7 +24,6 @@ db.serialize(() => {
         password TEXT NOT NULL
     )`);
 
-    // Updated Table Schema with date and status columns
     db.run(`CREATE TABLE IF NOT EXISTS events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -33,6 +32,10 @@ db.serialize(() => {
         status TEXT DEFAULT 'Pending',
         owner TEXT NOT NULL
     )`);
+
+    // Auto-add missing columns for existing databases
+    db.run(`ALTER TABLE events ADD COLUMN date TEXT`, (err) => {});
+    db.run(`ALTER TABLE events ADD COLUMN status TEXT DEFAULT 'Pending'`, (err) => {});
 });
 
 // JWT Auth Middleware
